@@ -4,11 +4,9 @@ import subprocess
 import shutil
 import requests
 import pytest
+from tests.config import Config
 
-ENDPOINTS = [
-    'https://mapcore-demo.org/staging/flatmap/v1/',
-    'https://mapcore-demo.org/current/flatmap/v3/'
-]
+ENDPOINT = Config.FLATMAP_ENDPOINT
 
 FLATMAPS = [
     'human-flatmap_male',
@@ -16,16 +14,21 @@ FLATMAPS = [
     'rat-flatmap'
 ]
 
+TESTING_VARIABLES = {}
+
+def get_variables(key):
+    return TESTING_VARIABLES[key]
+
 def set_variables(endpoint, data):
-    os.environ["TARGET_END_POINT"] = endpoint + 'competency/query'
+    TESTING_VARIABLES["END_POINT"] = endpoint + 'competency/query'
     for key, value in data.items():
         if key == 'human-flatmap_male':
-            os.environ["LATEST_MALE_UUID"] = value['uuid']
-            os.environ["LATEST_SCKAN_VERSION"] = value['knowledge-source']
+            TESTING_VARIABLES["MALE_UUID"] = value['uuid']
+            TESTING_VARIABLES["SCKAN_VERSION"] = value['knowledge-source']
         elif key == 'human-flatmap_female':
-            os.environ["LATEST_FEMALE_UUID"] = value['uuid']
+            TESTING_VARIABLES["FEMALE_UUID"] = value['uuid']
         elif key == 'rat-flatmap':
-            os.environ["LATEST_RAT_UUID"] = value['uuid']
+            TESTING_VARIABLES["RAT_UUID"] = value['uuid']
 
 def get_latest_flatmap(data, scope):
     latest_flatmap_dict = {}
@@ -71,12 +74,11 @@ class CompetencyQueryTest(unittest.TestCase):
             "tests/slow_tests/utility.py",
             "external/flatmap-server/tests/utility.py"
         )
-        for endpoint in ENDPOINTS:
-            flatmap_info = get_flatmap_info(endpoint)
-            latest_flatmap = get_latest_flatmap(flatmap_info, FLATMAPS)
-            set_variables(endpoint, latest_flatmap)
-            # Run all tests inside their repo
-            subprocess.run(["pytest", "external/flatmap-server/tests/"], env=os.environ)
+        flatmap_info = get_flatmap_info(ENDPOINT)
+        latest_flatmap = get_latest_flatmap(flatmap_info, FLATMAPS)
+        set_variables(ENDPOINT, latest_flatmap)
+        exit_code = pytest.main(["external/flatmap-server/tests/"])
+        print(f"Pytest exit code: {exit_code}")
 
 if __name__ == '__main__':
     unittest.main()

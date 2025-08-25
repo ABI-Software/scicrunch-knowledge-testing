@@ -1,13 +1,16 @@
 import os
+import sys
 import requests
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
+from tests.slow_tests.competency_query_tests import get_variables
 
-END_POINT = os.environ.get("TARGET_END_POINT")
+END_POINT = get_variables('END_POINT')
 HEADERS = {'Content-Type': 'application/json'}
 
-MALE_UUID = os.environ.get("LATEST_MALE_UUID")
-FEMALE_UUID = os.environ.get("LATEST_FEMALE_UUID")
-RAT_UUID = os.environ.get("LATEST_RAT_UUID")
-SCKAN_VERSION = os.environ.get("LATEST_SCKAN_VERSION")
+MALE_UUID = get_variables('MALE_UUID')
+FEMALE_UUID = get_variables('FEMALE_UUID')
+RAT_UUID = get_variables('RAT_UUID')
+SCKAN_VERSION = get_variables('SCKAN_VERSION')
 
 def cq_request(query: dict):
     response = requests.post(END_POINT, json=query, headers=HEADERS)
