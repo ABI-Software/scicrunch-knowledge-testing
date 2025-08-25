@@ -25,10 +25,10 @@ class CompetencyQueryTest(unittest.TestCase):
             "tests/slow_tests/overrides/utility.py",
             "external/flatmap-server/tests/utility.py"
         )
-        exit_code = pytest.main(["external/flatmap-server/tests/"])
         flatmap_info = get_flatmap_info()
         latest_flatmap = get_latest_flatmap(flatmap_info)
         set_variables(latest_flatmap)
+        exit_code = pytest.main(["tests/cq_tests/", "external/flatmap-server/tests/"])
         print(f"Pytest exit code: {exit_code}")
 
 if __name__ == '__main__':
