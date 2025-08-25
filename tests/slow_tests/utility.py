@@ -1,55 +1,16 @@
+import os
+import sys
 import requests
-from tests.config import Config
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
+from tests.slow_tests.competency_query_tests import get_variables
 
-FLATMAP_ENDPOINT = Config.FLATMAP_ENDPOINT
-FLATMAPS = [
-    'human-flatmap_male',
-    'human-flatmap_female',
-    'rat-flatmap'
-]
-
-END_POINT = FLATMAP_ENDPOINT + 'competency/query'
+END_POINT = get_variables('END_POINT')
 HEADERS = {'Content-Type': 'application/json'}
 
-MALE_UUID = '2b76d336-5c56-55e3-ab1e-795d6c63f9c1'
-FEMALE_UUID = '91359a0f-9e32-5309-b365-145d9956817d'
-RAT_UUID = 'fb6d0345-cb70-5c7e-893c-d744a6313c95'
-SCKAN_VERSION = 'sckan-2024-09-21'
-
-def set_variables(data):
-    global MALE_UUID, FEMALE_UUID, RAT_UUID, SCKAN_VERSION
-    for key, value in data.items():
-        if key == 'human-flatmap_male':
-            MALE_UUID = value['uuid']
-            SCKAN_VERSION = value['knowledge-source']
-        elif key == 'human-flatmap_female':
-            FEMALE_UUID = value['uuid']
-        elif key == 'rat-flatmap':
-            RAT_UUID = value['uuid']
-
-def get_latest_flatmap(data):
-    latest_flatmap_dict = {}
-    for key, value in data.items():
-        if key not in latest_flatmap_dict and key in FLATMAPS:
-            stored_maps = sorted(value, key=lambda x: x["created"], reverse=True)
-            latest_flatmap_dict[key] = stored_maps[0]
-    return latest_flatmap_dict
-
-def get_flatmap_info():
-    flatmap_dict = {}
-    flatmap_response = requests.get(FLATMAP_ENDPOINT)
-    flatmap_json = flatmap_response.json()
-    for map in flatmap_json:
-        map_id = map.get('id', 'N/A')
-        if map_id not in flatmap_dict:
-            flatmap_dict[map_id] = []
-        info = {
-            'uuid': map.get('uuid', 'N/A'),
-            'created': map.get('created', 'N/A'),
-            'knowledge-source': map.get('sckan', {}).get('knowledge-source', 'N/A')
-        }
-        flatmap_dict[map_id].append(info)
-    return flatmap_dict
+MALE_UUID = get_variables('MALE_UUID')
+FEMALE_UUID = get_variables('FEMALE_UUID')
+RAT_UUID = get_variables('RAT_UUID')
+SCKAN_VERSION = get_variables('SCKAN_VERSION')
 
 def cq_request(query: dict):
     response = requests.post(END_POINT, json=query, headers=HEADERS)
