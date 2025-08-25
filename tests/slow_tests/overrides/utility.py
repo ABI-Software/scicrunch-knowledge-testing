@@ -2,7 +2,7 @@ import os
 import sys
 import requests
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
-from tests.slow_tests.competency_query_tests import get_variables
+from tests.slow_tests.competency_query_utility import get_variables
 
 END_POINT = get_variables('END_POINT')
 HEADERS = {'Content-Type': 'application/json'}
