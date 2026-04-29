@@ -16,3 +16,4 @@ class Config(object):
     AWS_KEY=os.environ['AWS_KEY']
     AWS_SECRET=os.environ['AWS_SECRET']
     NEUROLUCIDA_HOST = os.environ.get("NEUROLUCIDA_HOST", "https://sparc.biolucida.net:8081")
+    FLATMAP_ENDPOINT = os.environ.get("FLATMAP_ENDPOINT", "https://mapcore-demo.org/devel/flatmap/v4/")
