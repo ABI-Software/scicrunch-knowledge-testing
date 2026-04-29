@@ -116,7 +116,8 @@ class ComparisonTestCase(unittest.TestCase):
         res = index.search('', {
             'attributesToRetrieve': [
                 'item.curie',
-                'item.name'
+                'item.name',
+                'item.published'
             ],
             'attributesToHighlight': [],
             'length': 1000,
@@ -131,9 +132,10 @@ class ComparisonTestCase(unittest.TestCase):
         algolia_doi = []
         name_doi_map = {}
         for item in res['hits']:
-            doi = item['item']['curie'].replace('DOI:', '', 1)
-            algolia_doi.append(doi)
-            name_doi_map[doi] = {'name': item['item']['name'], 'id': item['objectID']}
+            if 'published' not in item['item'] or item['item']['published']['boolean'] == 'true':
+              doi = item['item']['curie'].replace('DOI:', '', 1)
+              algolia_doi.append(doi)
+              name_doi_map[doi] = {'name': item['item']['name'], 'id': item['objectID']}
 
         checkResult(self, algolia_doi, scicrunch_doi, name_doi_map, 'Algolia vs SciCrunch')
 
