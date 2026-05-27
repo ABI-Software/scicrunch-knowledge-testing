@@ -1,11 +1,6 @@
 #===============================================================================
 
 import unittest
-from urllib.parse import urljoin
-
-#===============================================================================
-
-import requests
 
 #===============================================================================
 
@@ -17,9 +12,10 @@ from tests.config import Config
 
 #===============================================================================
 
+APINATOMY_MODEL = 'NeuronApinatComplex'
+
 KEAST_BLADDER_MODEL = {
-    'id': 'https://apinatomy.org/uris/models/keast-bladder',
-    'label': 'https://apinatomy.org/uris/models/keast-bladder',
+    'key-prefix': 'ilxtr:neuron-type-keast-',
     'paths': [
         {'id': 'ilxtr:neuron-type-keast-13',
          'models': 'ilxtr:neuron-type-keast-13'},
@@ -66,18 +62,13 @@ KEAST_BLADDER_MODEL = {
 
 KEAST_NEURON_PATH_5 = {
     'id': 'ilxtr:neuron-type-keast-5',
-    'label': 'parasympathetic spinal preganglionic neuron (kblad)',
-    'long-label': 'neuron type kblad 5',
+    'label': 'neuron type kblad 5',
+    'long-label': 'L6-S1 spinal cord (rexed laminae VII) to pelvic ganglion via white matter of L6-S1 via ventral root of L6-S1 via pelvic splanchnic nerve',
     'phenotypes': [
-        'ilxtr:ParasympatheticPhenotype',
-        'ilxtr:PreGanglionicPhenotype'
+        'ilxtr:neuron-phenotype-para-pre'
     ],
-    'axons': [
-        ('UBERON:0016508', ())
-    ],
-    'dendrites': [
-        ('UBERON:0016578', ('UBERON:0006460',)),
-        ('UBERON:0016578', ('ILX:0738432',))
+    'taxons': [
+        'NCBITaxon:10116'
     ],
     'connectivity': [
         (('ILX:0793615', ()), ('UBERON:0018675', ())),
@@ -89,13 +80,39 @@ KEAST_NEURON_PATH_5 = {
         (('ILX:0738432', ()), ('ILX:0793615', ()))
     ],
     'references': [
-        'PMID:10473279',
-        'PMID:86176',
-        'PMID:7174880',
-        'PMID:21283532',
-        'PMID:12401325',
-        'PMID:6736301',
-        'PMID:9442414'
+        'http://www.ncbi.nlm.nih.gov/pubmed/12401325',
+        'http://www.ncbi.nlm.nih.gov/pubmed/86176',
+        'http://www.ncbi.nlm.nih.gov/pubmed/10473279',
+        'http://www.ncbi.nlm.nih.gov/pubmed/9442414',
+        'http://www.ncbi.nlm.nih.gov/pubmed/21283532',
+        'http://www.ncbi.nlm.nih.gov/pubmed/7174880',
+        'http://www.ncbi.nlm.nih.gov/pubmed/6736301'
+    ],
+    'expert-consultants': [
+        'https://orcid.org/0000-0002-4341-3265'
+    ],
+    'forward-connections': [
+        'ilxtr:neuron-type-keast-1'
+    ],
+    'node-phenotypes': {
+        'ilxtr:hasSomaLocatedIn': [
+            ('UBERON:0016578', ('UBERON:0006460',)),
+            ('UBERON:0016578', ('ILX:0738432',))
+        ],
+        'ilxtr:hasAxonPresynapticElementIn': [
+            ('UBERON:0016508', ())
+        ],
+        'ilxtr:hasAxonSensorySubcellularElementIn': [],
+        'ilxtr:hasAxonLeadingToSensorySubcellularElementIn': [],
+        'ilxtr:hasAxonLocatedIn': [
+            ('ILX:0793615', ()),
+            ('ILX:0792853', ()),
+            ('UBERON:0018675', ())
+        ],
+        'ilxtr:hasDendriteLocatedIn': []
+    },
+    'nerves': [
+        ('UBERON:0018675', ())
     ],
     'errors': []
 }
@@ -107,22 +124,29 @@ class ConnectivityTestCase(unittest.TestCase):
         super().__init__(*args, **kwds)
         self.__knowledge_store = KnowledgeStore(
             clean_connectivity=True,
-            scicrunch_api=Config.SCICRUNCH_API,
             scicrunch_key=Config.SCICRUNCH_API_KEY
         )
 
     def test_connectivity_neurons(self):
-        knowledge = self.__knowledge_store.entity_knowledge(KEAST_BLADDER_MODEL['id'])
-        assert len(knowledge)
-        assert len(knowledge.get('paths')) == 20, 'Wrong number of neuron paths for Keast bladder model'
+        knowledge = self.__knowledge_store.entity_knowledge(APINATOMY_MODEL)
+        keast_paths = [path for path in knowledge.get('paths', []) if path.get('id', '').startswith(KEAST_BLADDER_MODEL['key-prefix'])]
+        assert len(keast_paths)
+        assert len(keast_paths) == 20, 'Wrong number of neuron paths for Keast bladder model'
 
     def test_connectivity_neuron_group(self):
         knowledge = self.__knowledge_store.entity_knowledge(KEAST_NEURON_PATH_5['id'])
+        knowledge_node_phenotypes = knowledge.get('node-phenotypes', {})
+        keast_node_phenotypes = KEAST_NEURON_PATH_5.get('node-phenotypes', {})
         assert len(knowledge)
         assert len(knowledge.get('connectivity', [])) == len(KEAST_NEURON_PATH_5['connectivity']), 'Incorrect number of nodes for Keast neuron path 5'
-        assert set(knowledge.get('axons', [])) == set(KEAST_NEURON_PATH_5['axons']), 'Incorrect set of axons for Keast neuron path 5'
-        assert set(knowledge.get('dendrites', [])) == set(KEAST_NEURON_PATH_5['dendrites']), 'Incorrect set of dendrites for Keast neuron path 5'
-        assert set(knowledge.get('phenotypes', [])) == set(KEAST_NEURON_PATH_5['phenotypes']), 'Incorrect phenotypes for Keast neuron path 5'
+        assert set(knowledge_node_phenotypes.get('ilxtr:hasSomaLocatedIn', [])) == set(keast_node_phenotypes['ilxtr:hasSomaLocatedIn']), 'Incorrect hasSomaLocatedIn node phenotype set for Keast neuron path 5'
+        assert set(knowledge_node_phenotypes.get('ilxtr:hasAxonPresynapticElementIn', [])) == set(keast_node_phenotypes['ilxtr:hasAxonPresynapticElementIn']), 'Incorrect hasAxonPresynapticElementIn node phenotype set for Keast neuron path 5'
+        assert set(knowledge_node_phenotypes.get('ilxtr:hasAxonLocatedIn', [])) == set(keast_node_phenotypes['ilxtr:hasAxonLocatedIn']), 'Incorrect hasAxonLocatedIn node phenotype set for Keast neuron path 5'
+        assert set(knowledge.get('phenotypes', [])) == set(KEAST_NEURON_PATH_5.get('phenotypes', []))
+        assert set(knowledge.get('taxons', [])) == set(KEAST_NEURON_PATH_5.get('taxons', []))
+        assert set(knowledge.get('expert-consultants', [])) == set(KEAST_NEURON_PATH_5.get('expert-consultants', []))
+        assert set(knowledge.get('forward-connections', [])) == set(KEAST_NEURON_PATH_5.get('forward-connections', []))
+        assert set(knowledge.get('nerves', [])) == set(KEAST_NEURON_PATH_5.get('nerves', []))
         assert len(knowledge.get('references', [])) > 5, 'Too few references for Keast neuron path 5'
 
 #===============================================================================
